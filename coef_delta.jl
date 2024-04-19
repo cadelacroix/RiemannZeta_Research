@@ -15,17 +15,6 @@ function read_zz(filepath,max_z)
 end
 
 
-# addrow! - adds to each row in (input_mat) the row
-# (mult * addrow). Parallelized. 
-function addrow!(input_mat,mult,addrow)
-    @threads for j in axes(input_mat,2) 
-        for i in axes(input_mat,1)         
-            @inbounds input_mat[i,j] += mult[i] * addrow[j]
-        end
-    end
-end
-
-
 # omega - sets up the "Vandermonde matrix" Ω_M from the 
 # vector (vect) that consists of the imaginary parts of zeta 
 # zeros. Here M = 2*length(vec) the output is a matrix of 
@@ -42,6 +31,17 @@ function omega(vect::Vector{BigFloat})
     end
     mat[n_rows,n_rows]=1
     transpose(mat)
+end
+
+
+# addrow! - adds to each row i in (input_mat) the row
+# (mult[i] * addrow). Parallelized. 
+function addrow!(input_mat,mult,addrow)
+    @threads for j in axes(input_mat,2) 
+        for i in axes(input_mat,1)         
+            @inbounds input_mat[i,j] += mult[i] * addrow[j]
+        end
+    end
 end
 
 
@@ -106,7 +106,7 @@ end
 
 # delta_coef - produces the coefficients δ_{N,n} from the Vandermonde
 # matrix (omega_mat)
-function delta_coef(omega_mat)
+function delta_coef(omega_mat::AbstractMatrix{BigFloat})
     gauss_elim!(omega_mat)
     mult_elementary!(omega_mat)
     normalized_coefficients(omega_mat)
@@ -141,7 +141,7 @@ end
 # according to the partition in (cutlist)
 function write_coefs(delta,cutlist,n_dps)
     for i in 1:length(cutlist)-1
-        chunk = Dict(Mm => delta[Mm] for Mm in cutlist[i]+1:cutlist[i+1])
+        chunk = Dict(Mm => [string(delta[Mm][n]) for n in 1:2*Mm+1] for Mm in cutlist[i]+1:cutlist[i+1])
         chunk_json = JSON.json(chunk)
         open("../Data/p$(n_dps)/CoefDelta_M$(cutlist[i]+1)-$(cutlist[i+1])_p$(n_dps).txt", "w") do f
             write(f, chunk_json)
@@ -152,13 +152,13 @@ end
 
 # Here we go!
 function main()
-    max_M = 10
+    max_M = 3
     max_computed_M = 13_200
     n_dps = 40_000
     chunk_size = Int(3e9)
 
     st = time()
-    filepath = "../Data/p$(n_dps)/NImZetaZero_M$(max_computed_M)_p$(n_dps).txt"
+    filepath = "../Data/p$(n_dps)/ImZetaZero_M$(max_computed_M)_p$(n_dps).txt"
     setprecision(BigFloat,n_dps;base=10)
     
     # Read zeta zeros from file and store in array
