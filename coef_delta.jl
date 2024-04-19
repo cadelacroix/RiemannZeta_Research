@@ -3,7 +3,7 @@ using .Threads, JSON #, BenchmarkTools
 # read_zz - reads the imaginary parts of the first (max_z) 
 # Riemann zeta zeros from the file (filepath)
 function read_zz(filepath,max_z)
-    zz = Array{BigFloat}[]
+    zz = Vector{BigFloat}()
     open(filepath) do f
         for _ in 1:max_z
             line = readline(f)
@@ -30,7 +30,7 @@ end
 # vector (vect) that consists of the imaginary parts of zeta 
 # zeros. Here M = 2*length(vec) the output is a matrix of 
 # dimensions N x N, where N=2M+1.
-function omega(vect::Array{BigFloat})
+function omega(vect::Vector{BigFloat})
     n_rows = 2*length(vect)+1
     mat = zeros(BigFloat,(n_rows,n_rows))
     @threads for j in 1:n_rows
@@ -47,7 +47,7 @@ end
 
 # gauss_elim! - performs Gauss elimination on the matrix (omega_mat)
 # while recording the multipliers under the main diagonal.
-function gauss_elim!(omega_mat::Matrix{BigFloat})
+function gauss_elim!(omega_mat::AbstractMatrix{BigFloat})
     max_N = size(omega_mat,1)
     st_1 = time()
     for k in 1:max_N
@@ -69,7 +69,7 @@ end
 # the multipliers recorded by (gauss_elim!) under the main diagonal 
 # of (omega_mat). After this function, the coefficients δ_{N,n}
 # before normalization are contained under the main diagonal. 
-function mult_elementary!(omega_mat::Matrix{BigFloat})
+function mult_elementary!(omega_mat::AbstractMatrix{BigFloat})
     max_N = size(omega_mat,1)
     st_1 = time()
     for k in 1:max_N
@@ -90,8 +90,9 @@ end
 # produces a dictionary (delta) with integer keys N that range from 1 
 # to max_N = size of (omega_mat). The entry (delta[N]) is a list of the 
 # coefficients δ_{N,n}, normalized so that δ_{N,1} = 1. 
-function normalized_coefficients(omega_mat::Matrix{BigFloat})
+function normalized_coefficients(omega_mat::AbstractMatrix{BigFloat})
     st_1 = time()
+    max_M = Int((size(omega_mat,1)-1)/2)
     delta = Dict{Int, Vector{BigFloat}}()
     @threads for Mm in 1:max_M
         Nn = 2*Mm+1
@@ -124,7 +125,6 @@ function cuts(max_M,typical_size,chunk_size)
         disc = 4*(1+chunk_size/typical_size+gsum)
         new_cut = floor(0.5 * (sqrt(disc) - 2))
         push!(cutlist,new_cut)
-        println(new_cut)
     end
 
     if cutlist[end] >= max_M
@@ -139,11 +139,11 @@ end
 
 # write_coefs - write the coefficients (delta) into chunk files 
 # according to the partition in (cutlist)
-function write_coefs(delta,cutlist)
+function write_coefs(delta,cutlist,n_dps)
     for i in 1:length(cutlist)-1
-        chunk = Dict(i => delta[i] for i in cutlist[i]+1:cutlist[i])
+        chunk = Dict(Mm => delta[Mm] for Mm in cutlist[i]+1:cutlist[i+1])
         chunk_json = JSON.json(chunk)
-        open("../Data/p{n_precision}/CoefDelta_M$(cutlist[i]+1)-$(cutlist[i+1])_p$(n_dps).txt", "w") do f
+        open("../Data/p$(n_dps)/CoefDelta_M$(cutlist[i]+1)-$(cutlist[i+1])_p$(n_dps).txt", "w") do f
             write(f, chunk_json)
         end
     end
@@ -152,16 +152,17 @@ end
 
 # Here we go!
 function main()
-    max_M = 1_300
-    max_computed_M = 1_300
-    n_dps = 10_000
+    max_M = 10
+    max_computed_M = 13_200
+    n_dps = 40_000
     chunk_size = Int(3e9)
 
+    st = time()
     filepath = "../Data/p$(n_dps)/NImZetaZero_M$(max_computed_M)_p$(n_dps).txt"
     setprecision(BigFloat,n_dps;base=10)
     
     # Read zeta zeros from file and store in array
-    zz = read_zz(filepath,max_z)
+    zz = read_zz(filepath,max_M)
     println("Importation of zeta zeros: $(time()-st) s. \n")
 
     # Set up Vandermonde matrix
@@ -175,7 +176,7 @@ function main()
     # Determine partition of files and write files
     typical_size = sizeof(zz[1])
     cutlist = cuts(max_M,typical_size,chunk_size)
-    write_coefs(delta,cutlist)
+    write_coefs(delta,cutlist,n_dps)
 end
 
 
