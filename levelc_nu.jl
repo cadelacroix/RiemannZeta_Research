@@ -17,7 +17,7 @@ function main()
     empty!(nu_str)
 
     levelc = Dict{Integer,String}()
-    for ((M,K,s),value) in nu 
+    @threads for ((M,K,s),value) in nu 
         if M == Int(floor(K/2))
             levelc[K] = value
         end
