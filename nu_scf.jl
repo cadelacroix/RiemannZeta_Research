@@ -1,5 +1,8 @@
 using FLoops, Nemo, JSON, BenchmarkTools
 
+
+# interval - outputs a tuple of numbers (X, Y, Z) from a string 
+# (filename) of the form "CoefDelta_MX-Y_pZ.*".
 function interval(filename::String)
     str_match = match(r"CoefDelta_M(\d+)-(\d+)_p(\d+)",filename)
     if !isnothing(str_match)
@@ -8,20 +11,30 @@ function interval(filename::String)
 end
 
 
+# interval_list - applies the function (interval) to all the files
+# in the folder "../Data/p$(dps)/", filters the tuples (X,Y,Z) with
+# Z = dps, and outputs a list of the corresponding pairs (X,Y).
 function interval_list(dps::Int)
     rawlist = Vector{Vector{Int64}}(filter(!isnothing,map(interval,readdir("../Data/p$(dps)/"))))
     map(x -> (x[1],x[2]),filter(x -> x[3] == dps, rawlist))
 end
 
 
+# get_chain - for a list of tuples (X,Y) corresponding to the 
+# starting and end point of integral intervals, outputs a sequence
+# of tuples (X_1,Y_1), ..., (X_k,Y_k) such that 
+# 1) m belongs to (X_1,Y_1) and M belongs to (X_k,Y_k)
+# 2) Y_i + 1 = X_{i+1} for all i in {1,...,k-1}.
+# If no such chain is found, it returns [].
+# This function is used to select the CoefDelta files that need 
+# to be opened to perform computations in a range with initial point
+# m and end point M. 
 function get_chain(intervals::Vector{Tuple{Int,Int}}, m::Int, M::Int)
     sorted_intervals = sort(intervals)
     
-    # Find the interval containing m
     i_m = findfirst(x -> (x[1] <= m <= x[2]), sorted_intervals)
     i_M = findlast(x -> (x[1] <= M <= x[2]), sorted_intervals)
     
-    # If M wasn't found, return empty array
     if isnothing(i_m) || isnothing(i_M)
         []
     else 
@@ -55,6 +68,8 @@ function get_chain(intervals::Vector{Tuple{Int,Int}}, m::Int, M::Int)
 end
 
 
+# open_coefdelta - opens the files CoefDelta corresponding to the 
+# range (range_M) with a precision of (dps), and outputs a dictionary.
 function open_coefdelta(range_M::AbstractRange{Int},dps::Int)
     intervals = interval_list(dps)
     chain = get_chain(intervals,range_M[1],range_M[end])
@@ -69,6 +84,7 @@ function open_coefdelta(range_M::AbstractRange{Int},dps::Int)
 end
 
 
+# divis - returns the list of all divisors of an integer (n).
 function divis(n::T) where {T<:Integer}
     f = factor(n)
     d = T[one(T)]
@@ -81,6 +97,12 @@ function divis(n::T) where {T<:Integer}
 end
 
 
+# power_23adic - returns the s-th power of x. If s is a 
+# rational number with denominator whose prime factors are
+# only 2 and 3, it performs the operation using integer powers
+# and the built-in functions sqrt and cbrt. This implementation
+# accelerates significantly computations when x is a BigFloat
+# with a high precision.
 function power_23adic(x::T,s::Number) where {T<:AbstractFloat}
     pow = x
     if eltype(s) == Rational{Int}
@@ -101,6 +123,9 @@ function power_23adic(x::T,s::Number) where {T<:AbstractFloat}
 end
 
 
+# nu_single - returns value of the nu function for a vector of delta 
+# coefficients (delta_N), with truncation parameter (n_cut) at the 
+# value (s).
 function nu_single(delta_N::Vector{T},n_cut::Integer,s::Number) where {T<:AbstractFloat}
     mu = zeros(T,n_cut)
     for n in 1:n_cut
@@ -111,6 +136,10 @@ function nu_single(delta_N::Vector{T},n_cut::Integer,s::Number) where {T<:Abstra
 end
 
 
+# nu - returns dictionary; the key (M,K,s) contains the value
+# of nu_single at (M,K,s). The parameters M,K,s are taken within
+# the ranges (range_M), (range_K), (range_s), respectively, and
+# (delt) containes the coefficients. The computation is parallelized.
 function nu(range_M,range_K,range_s,delt)
     I= Iterators.product(range_M,range_K,range_s) 
     nu_dic = Dict(i => BigFloat() for i in I)   
@@ -121,6 +150,10 @@ function nu(range_M,range_K,range_s,delt)
 end
 
 
+# scf - returns the simple continued fraction of a floating point (fl)
+# up to depth (n_depth), the output is a vector where the first number 
+# is the integer part of (fl), and the next numbers correspond to the
+# elements of the continued fraction.
 function scf(fl::T,n_depth::Integer) where {T<:AbstractFloat}
     q = zeros(Integer,n_depth)
     u = zeros(T,n_depth)
@@ -135,11 +168,8 @@ function scf(fl::T,n_depth::Integer) where {T<:AbstractFloat}
 end
 
 
-function str_range(rang)
-    "$(rang[1])-$(step(rang))-$(rang[end])"
-end
-
-
+# partition_dict - given a dictionary (dic), outputs a list of subdictionaries 
+# of (dic) of size in bytes of at most (chunk_size). 
 function partition_dict(dic::Dict, typical_size::Int, chunk_size::Int)
     partition = []
     tmp_dic = Dict()
@@ -166,7 +196,13 @@ function partition_dict(dic::Dict, typical_size::Int, chunk_size::Int)
 end
 
 
+# write_coefs - write the dictionaries of values of nu contained in the
+# list (partition) into chunk files. 
 function write_nu(partition,range_M,range_K,range_s,dps)
+    function str_range(rang)
+        "$(rang[1])-$(step(rang))-$(rang[end])"
+    end
+
     partition = map(JSON.json,partition)
     str_part = length(partition) > 1 ? ["_part_$(i)" for _ in partition] : [""]
     @floop for i in axes(partition,1)
@@ -178,6 +214,7 @@ end
 
 
 function main()
+    # Parameters
     range_M = 1:10
     range_K = 1:100
     range_s = 1:1

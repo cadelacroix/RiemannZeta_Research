@@ -48,16 +48,19 @@ def zeta_zeros(maxz,prec=100,cores=1):
 # a text file, separated by spaces. 
 
 if __name__ == '__main__':
+    # Parameters 
     max_M = 20
     n_precision = 2000
     n_cores = 2
 
     mpm.mp.dps = n_precision
 
+    # Compute zeta zeros
     st = time()
     zz = zeta_zeros(max_M,n_precision,n_cores)
     print(f'Computed zeta zeros after {time()-st} s.')
 
+    # Write zeta zeros
     if not os.path.exists(f'../Data/p{n_precision}'):
         os.makedirs(f'../Data/p{n_precision}')
 

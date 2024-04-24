@@ -151,8 +151,8 @@ function write_coefs(delta::Dict{Int64,Vector{BigFloat}},cutlist::Vector{Int64},
 end
 
 
-# Here we go!
 function main()
+    # Parameters
     max_M = 10
     max_computed_M = 13_200
     n_dps = 40_000
