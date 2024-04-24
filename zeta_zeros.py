@@ -64,7 +64,7 @@ if __name__ == '__main__':
     if not os.path.exists(f'Data/p{n_precision}'):
         os.makedirs(f'Data/p{n_precision}')
 
-    with open(f'Data/p{n_precision}/NImZetaZero_M{max_M}_p{n_precision}.txt','w') as f:
+    with open(f'Data/p{n_precision}/ImZetaZero_M{max_M}_p{n_precision}.txt','w') as f:
         for num in zz:
             zstr = mpm.nstr(num,n=n_precision)
             f.write(zstr + '\n')

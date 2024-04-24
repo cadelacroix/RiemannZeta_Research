@@ -1,5 +1,7 @@
-using FLoops, Nemo, JSON, BenchmarkTools
+##### COMPUTATION OF nu(M,K,s) #####
 
+
+using FLoops, Nemo, JSON #, BenchmarkTools
 
 # interval - outputs a tuple of numbers (X, Y, Z) from a string 
 # (filename) of the form "CoefDelta_MX-Y_pZ.*".

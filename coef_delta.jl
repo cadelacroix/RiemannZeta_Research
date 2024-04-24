@@ -1,5 +1,6 @@
-using .Threads, JSON #, BenchmarkTools
+##### COMPUTATION OF DELTA COEFFICIENTS FOR FINITE DIRICHLET SUM #####
 
+using .Threads, JSON #, BenchmarkTools
 
 # read_zz - reads the imaginary parts of the first (max_z) 
 # Riemann zeta zeros from the file (filepath)
