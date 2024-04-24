@@ -1,12 +1,5 @@
 using BenchmarkTools, JSON, .Threads
 
-n_dps = 10_000
-max_M = 1_300
-increments = [0,1,2,10,20,50,100,200,500,800,1000]
-nu_str = Dict{String,String}()
-nu = Dict{Tuple{Integer,Integer,Integer},String}()
-
-
 function parse_tuple(str)
     str = replace(str, '(' => "", ')' => "")
     parts = split(str, ", ")
@@ -16,26 +9,22 @@ function parse_tuple(str)
 end
 
 function main()
-    for i in 1:6
-        file_content = read("/home/c.delacruz/JuliaYuri/M$(max_M)_p$(n_dps)/nu_N1-2-2599_K2-2-3000_s1_part$(i).json",String)
-        data = JSON.parse(file_content)
-        merge!(nu_str, data)
-    end
+    n_dps = 10_000
 
+    file_content = read("Data/p$(n_dps)/nu_M1-1-200_K1-1-600_s1-1-1_p$(n_dps).json",String)
+    nu_str = JSON.parse(file_content)
     nu = Dict(parse_tuple(index) => value for (index,value) in nu_str)
     empty!(nu_str)
 
-    @threads for incr in increments
-        levelc = Dict{Integer,String}()
-        for ((N,K,s),value) in nu 
-            if N == K + 1 + incr
-                levelc[K] = value
-            end
+    levelc = Dict{Integer,String}()
+    for ((M,K,s),value) in nu 
+        if M == Int(floor(K/2))
+            levelc[K] = value
         end
-        json_levelc = JSON.json(levelc)
-        open("nu_levelc_K+1+$(incr).json","w") do f
-            write(f,json_levelc)
-        end
+    end
+    json_levelc = JSON.json(levelc)
+    open("nu_levelc_Mfloor(K/2)_p$(n_dps).json","w") do f
+        write(f,json_levelc)
     end
 end
 
