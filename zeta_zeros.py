@@ -51,7 +51,7 @@ if __name__ == '__main__':
     # Parameters 
     max_M = 20
     n_precision = 2000
-    n_cores = 2
+    n_cores = 80
 
     mpm.mp.dps = n_precision
 
@@ -61,10 +61,10 @@ if __name__ == '__main__':
     print(f'Computed zeta zeros after {time()-st} s.')
 
     # Write zeta zeros
-    if not os.path.exists(f'../RiemannZeta_Data/p{n_precision}'):
-        os.makedirs(f'../RiemannZeta_Data/p{n_precision}')
+    if not os.path.exists(f'/Data/p{n_precision}'):
+        os.makedirs(f'/Data/p{n_precision}')
 
-    with open(f'../RiemannZeta_Data/p{n_precision}/NImZetaZero_M{max_M}_p{n_precision}.txt','w') as f:
+    with open(f'/Data/p{n_precision}/NImZetaZero_M{max_M}_p{n_precision}.txt','w') as f:
         for num in zz:
             zstr = mpm.nstr(num,n=n_precision)
             f.write(zstr + '\n')

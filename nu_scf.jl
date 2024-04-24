@@ -15,7 +15,7 @@ end
 # in the folder "../RiemannZeta_Data/p$(dps)/", filters the tuples (X,Y,Z) with
 # Z = dps, and outputs a list of the corresponding pairs (X,Y).
 function interval_list(dps::Int)
-    rawlist = Vector{Vector{Int64}}(filter(!isnothing,map(interval,readdir("../RiemannZeta_Data/p$(dps)/"))))
+    rawlist = Vector{Vector{Int64}}(filter(!isnothing,map(interval,readdir("/Data/p$(dps)/"))))
     map(x -> (x[1],x[2]),filter(x -> x[3] == dps, rawlist))
 end
 
@@ -77,7 +77,7 @@ function open_coefdelta(range_M::AbstractRange{Int},dps::Int)
     data = Dict((Mlo,Mup) => Dict{String,Vector{String}}() for (Mlo,Mup) in chain)
     delta_pre = Dict((Mlo,Mup) => Dict{Int,Vector{BigFloat}}() for (Mlo,Mup) in chain)
     @floop for (Mlo,Mup) in chain
-        data[Mlo,Mup] = JSON.parse(read("../RiemannZeta_Data/p$(dps)/CoefDelta_M$(Mlo)-$(Mup)_p$(dps).json",String))
+        data[Mlo,Mup] = JSON.parse(read("/Data/p$(dps)/CoefDelta_M$(Mlo)-$(Mup)_p$(dps).json",String))
         delta_pre[Mlo,Mup] = Dict(parse(Int,key) => map(v -> parse(BigFloat,v),value) for (key,value) in data[Mlo,Mup])
     end
     merge(values(delta_pre)...)
@@ -206,7 +206,7 @@ function write_nu(partition,range_M,range_K,range_s,dps)
     partition = map(JSON.json,partition)
     str_part = length(partition) > 1 ? ["_part_$(i)" for _ in partition] : [""]
     @floop for i in axes(partition,1)
-        open("../RiemannZeta_Data/p$(dps)/nu_M$(str_range(range_M))_K$(str_range(range_K))_s$(str_range(range_s))_p$(dps)$(str_part[i]).json", "w") do f
+        open("/Data/p$(dps)/nu_M$(str_range(range_M))_K$(str_range(range_K))_s$(str_range(range_s))_p$(dps)$(str_part[i]).json", "w") do f
             write(f, partition[i])
         end
     end

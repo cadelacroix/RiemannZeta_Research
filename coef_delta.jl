@@ -144,7 +144,7 @@ function write_coefs(delta::Dict{Int64,Vector{BigFloat}},cutlist::Vector{Int64},
     for i in 1:length(cutlist)-1
         chunk = Dict(string(Mm) => map(string, delta[Mm]) for Mm in cutlist[i]+1:cutlist[i+1])
         chunk_json = JSON.json(chunk)
-        open("../RiemannZeta_Data/p$(n_dps)/CoefDelta_M$(cutlist[i]+1)-$(cutlist[i+1])_p$(n_dps).json", "w") do f
+        open("/Data/p$(n_dps)/CoefDelta_M$(cutlist[i]+1)-$(cutlist[i+1])_p$(n_dps).json", "w") do f
             write(f, chunk_json)
         end
     end
@@ -159,7 +159,7 @@ function main()
     chunk_size = Int(3e9)
 
     st = time()
-    filepath = "../RiemannZeta_Data/p$(n_dps)/ImZetaZero_M$(max_computed_M)_p$(n_dps).txt"
+    filepath = "/Data/p$(n_dps)/ImZetaZero_M$(max_computed_M)_p$(n_dps).txt"
     setprecision(BigFloat,n_dps;base=10)
     
     # Read zeta zeros from file and store in array
