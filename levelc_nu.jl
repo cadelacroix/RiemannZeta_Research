@@ -19,7 +19,7 @@ function main()
 
     levelc = Dict{Integer,String}()
     @threads for ((M,K,s),value) in nu 
-        if M == Int(floor(K/2))
+        if M == Int(ceil(K/2))
             levelc[K] = value
         end
     end
