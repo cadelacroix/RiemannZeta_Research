@@ -187,6 +187,7 @@ function partition_dict(dic::Dict, typical_size::Int, chunk_size::Int)
             push!(partition,tmp_dic)
             tmp_dic = Dict()
             count = 0
+            count_chunks += 1
         end
     end
 
@@ -206,8 +207,8 @@ function write_nu(partition,range_M,range_K,range_s,dps)
     end
 
     partition = map(JSON.json,partition)
-    str_part = length(partition) > 1 ? ["_part_$(i)" for _ in partition] : [""]
-    @floop for i in axes(partition,1)
+    str_part = length(partition) > 1 ? ["_part_$(i)" for i in 1:length(partition)] : [""]
+    @floop for i in length(partition)
         open("Data/p$(dps)/nu_M$(str_range(range_M))_K$(str_range(range_K))_s$(str_range(range_s))_p$(dps)$(str_part[i]).json", "w") do f
             write(f, partition[i])
         end
@@ -217,11 +218,11 @@ end
 
 function main()
     # Parameters
-    range_M = 1:10
-    range_K = 1:100
+    range_M = 1:200
+    range_K = 1:600
     range_s = 1:1
     n_dps = 40_000
-    chunk_size = Int(3e9)
+    chunk_size = Int(5e9)
 
     st = time()
     setprecision(BigFloat,n_dps;base=10)
