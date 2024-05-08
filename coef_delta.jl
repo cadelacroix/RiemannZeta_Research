@@ -154,8 +154,8 @@ end
 
 function main()
     # Parameters
-    max_M = 10
-    max_computed_M = 13_200
+    max_M = 10_000
+    max_computed_M = 40_000
     n_dps = 40_000
     chunk_size = Int(3e9)
 

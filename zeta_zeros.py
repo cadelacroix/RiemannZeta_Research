@@ -49,8 +49,8 @@ def zeta_zeros(maxz,prec=100,cores=1):
 
 if __name__ == '__main__':
     # Parameters 
-    max_M = 20
-    n_precision = 2000
+    max_M = 1_500
+    n_precision = 10_000
     n_cores = 80
 
     mpm.mp.dps = n_precision
