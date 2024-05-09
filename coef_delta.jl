@@ -154,7 +154,7 @@ end
 
 function main()
     # Parameters
-    max_M = 10_000
+    max_M = 28_000
     max_computed_M = 40_000
     n_dps = 40_000
     chunk_size = Int(3e9)
@@ -176,7 +176,7 @@ function main()
     println("Computed delta coefficients: $(time()-st) s")
 
     # Determine partition of files and write files
-    typical_size = sizeof(zz[1])
+    typical_size = sizeof(string(zz[1]))
     cutlist = cuts(max_M,typical_size,chunk_size)
     write_coefs(delta,cutlist,n_dps)
     println("Total time: $(time()-st) s")
