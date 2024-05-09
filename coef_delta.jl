@@ -154,10 +154,10 @@ end
 
 function main()
     # Parameters
-    max_M = 28_000
+    max_M = 5_000
     max_computed_M = 40_000
     n_dps = 40_000
-    chunk_size = Int(3e9)
+    chunk_size = Int(1e10)
 
     st = time()
     filepath = "Data/p$(n_dps)/ImZetaZero_M$(max_computed_M)_p$(n_dps).txt"
