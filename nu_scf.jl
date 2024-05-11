@@ -208,7 +208,7 @@ function write_nu(partition,range_M,range_K,range_s,dps)
 
     partition = map(JSON.json,partition)
     str_part = length(partition) > 1 ? ["_part_$(i)" for i in 1:length(partition)] : [""]
-    @floop for i in length(partition)
+    @floop for i in 1:length(partition)
         open("Data/p$(dps)/nu_M$(str_range(range_M))_K$(str_range(range_K))_s$(str_range(range_s))_p$(dps)$(str_part[i]).json", "w") do f
             write(f, partition[i])
         end
@@ -219,10 +219,10 @@ end
 function main()
     # Parameters
     range_M = 1:1500
-    range_K = 500:500:2000
-    range_s = 0:1//2:2
+    range_K = 1:3000
+    range_s = 1:1
     n_dps = 10_000
-    chunk_size = Int(3e9)
+    chunk_size = Int(5e9)
 
     st = time()
     setprecision(BigFloat,n_dps;base=10)
