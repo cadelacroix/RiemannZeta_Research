@@ -22,11 +22,11 @@ function main()
     println("Opened files.") 
 
     incr = 0:5:100
-    levelc = Dict(m => ["" for _ in incr] for m in 1:1500)
+    levelc = Dict((i,m) => "" for i in incr for m in 1:1500-i)
     @threads for i in incr
         for ((M,K,s),value) in nu 
             if K == 2 * (M-i)
-                levelc[M-i] = value
+                levelc[i,M-i] = value
             end
         end
     end
