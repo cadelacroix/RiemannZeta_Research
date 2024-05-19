@@ -21,8 +21,8 @@ function main()
     nu = merge(values(nu_part)...)
     println("Opened files.") 
 
-    incr = 0:5:100
-    levelc = Dict((i,m) => "" for i in incr for m in 1:1500-i)
+    incr = -500:10:500
+    levelc = Dict((i,m) => "" for i in incr for m in (i >= 0 ? 1 : 1-i):(i>=0 ? 1500-i : 1500))
     @threads for i in incr
         for ((M,K,s),value) in nu 
             if K == 2 * (M-i)
@@ -33,7 +33,7 @@ function main()
     println("Extracted level curves.")
 
     json_levelc = JSON.json(levelc)
-    open("Data/p$(n_dps)/nu_levelc_M+i_2M_i0-5-100_p$(n_dps).json","w") do f
+    open("Data/p$(n_dps)/nu_levelc_M+i_2M_im500-5-500_p$(n_dps).json","w") do f
         write(f,json_levelc)
     end
     println("Exported JSON file.")
