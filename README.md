@@ -1,3 +1,28 @@
+# Zero-based approximation of the Riemann zeta function
+
+This project delves into the *Riemann zeta function*, a cornerstone of number theory due to the remarkable connection between its zeros and the distribution of prime numbers. The exact location of its zeros constitutes the renowned Riemann hypothesis.
+
+This project focuses on a sequence of complex functions conceived by Y. Matiyasevich as efficient approximations of $\zeta$. Our goal is to fully elucidate the nature of the approximation error to uncover new insights into the Riemann zeta function by **analyzing vast datasets**. 
+
+## A bit of math before code
+
+The Riemann zeta function $\zeta$ is defined as the infinite sum 
+
+$$\zeta(s) = \sum_{n=1}^{+\infty} n^{-s}$$ 
+
+for every complex number $s$ with $\mathrm{Re}(s) > 1$. This function has a pole at $s=1$ and can be analytically extended to the rest of the complex plane. The function $\zeta$ vanishes at every negative even number; these are known as its *trivial* zeros. In turn, the non-trivial zeros are known to lie in the so-called *critical strip*, that is, the set of complex numbers $s$ with $0 < \mathrm{Re}(s) < 1$. The Riemann hypothesis predicts that all the non-trivial zeros lie on the *critical line* $\lbrace s \mid \mathrm{Re}(s) = 1/2 \rbrace$. 
+
+![Alt text](https://assets.digitalocean.com/articles/alligator/boo.svg "a title")
+
+Matiyasevich's approximations are finite sums of the form $\sum_{n=1}^N \alpha_n \cdot n^{-s}$ that *interpolate* $\zeta$ based on a finite number of its critical-line zeros. Denoting by $\rho_1, \rho_2, \rho_3, \ldots$ the critical-line zeros with positive imaginary parts, ordered by increasing imaginary parts, 
+
+$$\Omega_M()
+
+## Overview
+
+
+
+
 Computing the Riemann zeta function via finite Dirichlet sum. Based on explorations by Yuri Matiyasevich. 
 
 Scripts:
