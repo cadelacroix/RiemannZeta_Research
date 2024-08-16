@@ -38,13 +38,23 @@ Despite being defined only from a finite number of zeros, Matiyasevich observed 
 
 In this project, we focus on the quotient
 
-$$\nu_M(s) := \frac{\Omega_M(s)}{\zeta(s)} = \sum_{n=1}^{+\infty} \mu_{M,n} \ n^{-s}$$
+$$\nu_M(s) := \frac{\Omega_M(s)}{\zeta(s)} = \frac{\sum_{n=1}^{2M+1} \delta_{M,n} \ n^{-s}}{\sum_{n=1}^{+\infty} n^{-s}}.$$
 
-and its finite truncation
+By the Möbius inversion formula, the quotient $\nu_M(s)$ may be written as the infinite sum
 
-$$\nu_{M,K}(s):= \sum_{n=1}^K \mu_{M,n} \ n^{-s}.$$
+$$\nu_M(s) = \sum_{n=1}^{+\infty} \mu_{M,n} \ n^{-s},$$
 
-Both quantify the difference between Matiyasevich's interpolations and the Riemann zeta function. Through our data-driven approach, we aim to describe the dependencies of the functions $\nu_M(s)$ and $\nu_{M, K}(s)$ on the parameters $M, K, s$, generating a comprehensive mathematical conjecture. 
+where the coefficients $\mu_{M,n}$ are determined by the formula
+
+$$\mu_{M,n} = \sum_{\overset{{\displaystyle d=1}}{d \mid n}}^{2M+1} \mu\left(\frac{n}{d}\right) \ \delta_{M,d}.$$
+
+and $\mu$ denotes the Möbius mu function. Finally, we consider the finite truncation
+
+$$\nu_{M,K}(s):= \sum_{n=1}^K \mu_{M,n} \ n^{-s}$$
+
+of $\nu_{M}(s)$. Both $\nu_M(s)$ and $\nu_{M, K}(s)$ quantify the difference between Matiyasevich's interpolations and the Riemann zeta function. 
+
+Through our data-driven approach, we aim to describe the dependencies of the functions $\nu_M(s)$ and $\nu_{M, K}(s)$ on the parameters $M, K, s$, generating a comprehensive mathematical conjecture. 
 
 ## Scripts and functions
 
