@@ -4,6 +4,16 @@ This project delves into the *Riemann zeta function*, a cornerstone of number th
 
 This project focuses on a sequence of complex functions conceived by Y. Matiyasevich as efficient approximations of $\zeta$. Our goal is to fully elucidate the nature of the approximation error to uncover new insights into the Riemann zeta function by **analyzing vast datasets**. 
 
+## Overview
+
+The code in this repository –written in Python and Julia– generates the data that defines Matiyasevich's approximations of the Riemann zeta function and then computes the approximation errors. The next section of this README provides a quick introduction to the mathematical objects involved in this code. After that, we give an overview of the various scripts and their key functions.
+
+In order to handle computational instability in our calculations, we need to maintain high precision in our floating-point numbers, generally requiring around $10^5$ or more decimal digits. We achieve this using **arbitrary-precision floating-point arithmetic**, available in Python through the `mpmath` package, and in Julia through its native `BigFloat` type. 
+
+The need for arbitrary precision resulted in significant performance issues, which we addressed by (i) implementing the most computationally intensive parts of the code in **Julia**, and (ii) **parallelizing** whenever feasible. 
+
+The Python function `mpmath.zetazero`, which has no equivalent in Julia, calculates the critical-line zeros of $\zeta$ with a specified precision. While it is possible to call a Python function in Julia using `PyCall`, it does not appear feasible to parallelize a function in this context. This explains our choice of Python for this specific part of the code. 
+
 ## A bit of the math behind the code
 
 The Riemann zeta function $\zeta$ is defined as the infinite sum 
@@ -16,17 +26,17 @@ Matiyasevich's approximations of $\zeta$ are finite sums of the form $\sum_{n=1}
 
 <p align="center"><img src="./Images/critical.png" width=300 alt="Critical strip and line with a few non-trivial zeros"></p>
 
-The interpolations are then defined by
+The interpolations are then defined by the formula
 
 $$\Omega_M(s) = \sum_{n=1}^{2M+1} \delta_{M,n} \ n^{-s}$$
 
-where $M$ is a positive integer, $\delta_{M,1} = 1$, and the rest of the coefficients $\delta_{M,n}$ are determined as the unique solutions to the linear system of equations
+where $M$ is a positive integer, $\delta_{M,1} = 1$, and the rest of the coefficients $\delta_{M,n}$ are defined as the unique solutions to the linear system
 
 $$\Omega_M(\rho_1) = \cdots = \Omega_M(\rho_M) = \Omega_M(\bar\rho_1) = \cdots = \Omega_M(\bar\rho_M) = 0.$$
 
-Despite being defined only from a finite number of zeros, Matiyasevich observed that the functions $\Omega_M$ "remember" a great deal of information about the Riemann zeta function and have numerous remarkable properties, exposed in the reference [REF]. 
+Despite being defined only from a finite number of zeros, Matiyasevich observed that the functions $\Omega_M$ "remember" a great deal of information about the Riemann zeta function and have numerous remarkable properties, as described in the reference [REF]. 
 
-In this project, we focus the quotient
+In this project, we focus on the quotient
 
 $$\nu_M(s) := \frac{\Omega_M(s)}{\zeta(s)} = \sum_{n=1}^{+\infty} \mu_{M,n} \ n^{-s}$$
 
@@ -36,14 +46,7 @@ $$\nu_{M,K}(s):= \sum_{n=1}^K \mu_{M,n} \ n^{-s}.$$
 
 Both quantify the difference between Matiyasevich's interpolations and the Riemann zeta function. Through our data-driven approach, we aim to describe the dependencies of the functions $\nu_M(s)$ and $\nu_{M, K}(s)$ on the parameters $M, K, s$, generating a comprehensive mathematical conjecture. 
 
-## Overview
-
-
-
-
-Computing the Riemann zeta function via finite Dirichlet sum. Based on explorations by Yuri Matiyasevich. 
-
-Scripts:
+## Scripts and functions
 
 1_zeta_zeros.py
   Given a positive integer (max_M), this Python script returns a list of the first (max_M) zeros of the Riemann zeta function 
