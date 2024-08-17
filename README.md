@@ -58,31 +58,39 @@ Through our data-driven approach, we aim to describe the dependencies of the fun
 
 ## Scripts and functions
 
-1_zeta_zeros.py
-  Given a positive integer (max_M), this Python script returns a list of the first (max_M) zeros of the Riemann zeta function 
-  with real part 1/2 and positive imaginary part. The precision of the zeros (in number of digits) is specified as the variable (n_dps). 
-  The variable (n_cores) correspond to the number of cores over which the computation is distributed. 
+Before executing any of the scripts described below, parameters should be adjusted in their `main` functions.
 
-  The output is a text file that contains the imaginary part of the zeros, ordered increasingly, separated by newline characters ('\n').
-  The file will be recorded in the path "~/Data/p(n_dps)/ImZetaZero_M(max_M)_p(n_dps).txt".
+### **`zeta_zeros.py`**
 
-  Input parameters (max_M, n_dps, n_cores) must be specified in the "__name__ = '__main__'" section of the code.
+This script returns a list of the imaginary parts of the first $M$ critical-line zeros $\rho_1,\rho_2,\ldots,\rho_M$ of the Riemann zeta function (see [image](./Images/critical.png) above), multi-threading the execution of the function `mpmath.zetazero`.
 
-  The zeros are computed using the function mpmath.zetazero, built in the mpmath package. 
+**Parameters**
+* `max_M` (int). Maximal index $M$ of the critical-line zeros to be computed.
+* `n_dps` (int). Precision in number of digits.
+* `n_cores` (int). Number of cores for multi-threading. 
 
+**Output.**
+Text file (txt) containing the imaginary parts of the first `max_M` critical-line zeros with precision of `n_dps` number of digits, ordered increasingly and separated by new-line characters `\n`. Its path will be `~/Data/p(n_dps)/ImZetaZero_M(max_M)_p(n_dps).txt`.
 
-2_coef_delta.jl
-  Assume that the file "~/Data/p(n_dps)/ImZetaZero_M(max_computed_M)_p(n_dps).txt" produced by the script 1_zeta_zeros.py is in place, 
-  and let (max_M) be a positive integer less than or equal to (max_computed_M). This Julia script computes for all M = 1, ..., (max_M), 
-  the coefficients of the unique finite Dirichlet sum
+**Key functions**
 
-  \[
-    \Omega_M(s) = \sum_{n=1}^N \delta_{N,n} n^{-s}
-  \]
+TODO
 
-  that vanishes on the first M zeros of the Riemann zeta function and on its complex conjugates, with $N = 2M + 1$ and $\delta_{N,1} = 1$.
-  The computation is performed with a numerical precision of (n_dps) decimal digits. 
+### **`coef_delta.jl`**
 
-  The output is a dictionary whose keys are integers M = 1, ..., max_M. The value at the key M is a list of length N = 2M + 1 that contains
-  the coefficients $\delta_{N,n}$ for n = 1, ..., N. The dictionary is then split in several JSON files of maximal size specified by
-  the parameter (chunk_size).
+This script computes the coefficients $\delta_{M,n}$ (with $n=1, \ldots, 2M+1$) of Matiyasevich's approximation $\Omega_M$ for all $M = 1$, ..., `max_M`, by solving the linear systems corresponding to all of the approximations simultaneously. It is a multi-thread implementation in Julia of the Gauss algorithm without pivots, based on an algorithm due to Matiyasevich and ___.
+
+**Parameters**
+
+* `max_M` (int). Maximal index of $M$ for the approximation
+* `max_computed_M` (int).
+* `n_dps` (int). 
+* `chunk_size` (int). 
+
+**Input.**
+Text file (txt) `~/Data/p(n_dps)/ImZetaZero_M(max_computed_M)_p(n_dps).txt` as output by the script `zeta_zeros.py`.
+  
+**Output.**
+Dictionary whose keys are integers from 1 to `max_M` and the value at key $M$ is a list of the coefficients $\delta_{N,n}$ for $n = 1, ..., 2M+1$ recorded as strings. The dictionary is split as several JSON files of size roughly equal to the parameter `chunk_size`. The path of the JSON files will be `~/Data/p$(n_dps)/CoefDelta_M$(start)-$(end)_p$(n_dps).json` where `start` and `end` determine the range of dictionary keys stored in the file.     
+
+### **`nu_scf.jl`**
