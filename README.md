@@ -8,8 +8,8 @@ This project focuses on a sequence of complex functions conceived by [Y. Matiyas
 
 The code in this repository –written in Python and Julia– generates the numerical data that defines Matiyasevich's approximations of the Riemann zeta function, as introduced in the references [^mat13] and [^mat16], and then computes the approximation errors. The next section of this README introduces the mathematical objects involved in this code, and the subsequent one gives an overview of the various scripts in the repository.
 
-[^mat13]: Y. Matiyasevich. *Calculation of Riemann's zeta function via interpolating determinants.* Preprints of MPIM in Bonn, 2013.  [http://www.mpim-bonn.mpg.de/preblob/5368](http://www.mpim-bonn.mpg.de/preblob/5368).
-[^mat16]: Y. Matiyasevich. *Riemann’s zeta function and finite Dirichlet series.* St. Petersburg Math. J. 27 (2016), 985-1002. [https://www.ams.org/journals/spmj/2016-27-06/S1061-0022-2016-01431-9/](https://www.ams.org/journals/spmj/2016-27-06/S1061-0022-2016-01431-9/)
+[^mat13]: Y. Matiyasevich. [*Calculation of Riemann's zeta function via interpolating determinants.*](https://www.mpim-bonn.mpg.de/preblob/5368) Preprints of MPIM in Bonn, 2013.
+[^mat16]: Y. Matiyasevich. [*Riemann’s zeta function and finite Dirichlet series.*](https://www.ams.org/journals/spmj/2016-27-06/S1061-0022-2016-01431-9/) St. Petersburg Math. J. 27 (2016), 985-1002. 
 
 To handle computational instability in our calculations, we maintain high precision in our floating-point numbers, generally requiring around $10^5$ or more decimal digits. This can be achieved using **arbitrary-precision floating-point arithmetic**, available in Python through the `mpmath` package, and in Julia through its native `BigFloat` type. 
 
@@ -87,7 +87,7 @@ TXT file containing the imaginary parts of the first `max_M` critical-line zeros
 
 This script computes the coefficients $\delta_{M,n}$ (with $n=1, \ldots, 2M+1$) of Matiyasevich's approximation $\Omega_M$ for all $M = 1$, ..., `max_M`, by solving the linear systems corresponding to all of the approximations simultaneously. It is a multi-thread implementation in Julia of the Gauss algorithm without pivots, based on an algorithm due to Beliakov and Matiyasevich (see the reference [^bel]).
 
-[^bel]: G. Beliakov and Y. Matiyasevich. *A parallel algorithm for calculation of determinants and minors using arbitrary precision arithmetic.* BIM Numerical Mathematics 56 (2016), 33–50. 
+[^bel]: G. Beliakov and Y. Matiyasevich. [*A parallel algorithm for calculation of determinants and minors using arbitrary precision arithmetic.*](https://link.springer.com/article/10.1007/s10543-015-0547-z) BIM Numerical Mathematics 56 (2016), 33–50. 
 
 **Parameters**
 
