@@ -72,12 +72,10 @@ This script returns a list of the imaginary parts of the first $M$ critical-line
 **Parameters**
 * `max_M` (int). Maximal index $M$ of the critical-line zeros to be computed.
 * `n_dps` (int). Precision in number of digits.
-* `n_cores` (int). Number of cores for multi-threading. 
+* `n_cores` (int). Number of cores for multithreading. 
 
 **Output file.**
-Text file (txt) containing the imaginary parts of the first `max_M` critical-line zeros with precision of `n_dps` number of digits, ordered increasingly and separated by new-line characters `\n`. Its path will be 
-
-<pre> ~/Data/p<b>[n_dps]</b>/ImZetaZero_M<b>[max_M]</b>_p<b>[n_dps]</b>.txt </pre>
+TXT file containing the imaginary parts of the first `max_M` critical-line zeros with a precision of `n_dps` number of digits, ordered increasingly and separated by new-line characters `\n`. Its path will be <code>~/Data/p<b>[<i>n_dps</i>]</b>/ImZetaZero_M<b>[<i>max_M</i>]</b>_p<b>[<i>n_dps</i>]</b>.txt</code>.
 
 ### **`coef_delta.jl`**
 
@@ -88,34 +86,38 @@ This script computes the coefficients $\delta_{M,n}$ (with $n=1, \ldots, 2M+1$) 
 **Parameters**
 
 * `max_M` (int). Maximal index of $M$ for the approximations $\Omega_M$ to be computed. 
-* `max_computed_M` (int). Maximal index of the zeros contained in the input file (see "Input file" below).
-* `n_dps` (int). Precision in number of digits. It must coincide with the precision specified in the path of the input file (see "Input file" below).
-* `chunk_size` (int).  Upper bound *in bytes* for size of output JSON files.  
+* `max_computed_M` (int). Maximal index of the zeros listed in the input file (see "Input file" below).
+* `n_dps` (int). Precision in number of digits. It must coincide with the precision specified in the input file path (see "Input file" below).
+* `chunk_size` (int).  Upper bound *in bytes* for the size of output JSON files (see "Output files" below).  
 
 **Input file.**
-Text file (txt) as output by the script `zeta_zeros.py` with path
-
-<pre> ~/Data/p<b>[n_dps]</b>/ImZetaZero_M<b>[max_computed_M]</b>_p<b>[n_dps]</b>.txt </pre>
+TXT file (as output by `zeta_zeros.py`) with path <code>~/Data/p<b>[<i>n_dps</i>]</b>/ImZetaZero_M<b>[<i>max_computed_M</i>]</b>_p<b>[<i>n_dps</i>]</b>.txt</code> listing the critical-line zeros of zeta up to index `max_computed_M` with precision `n_dps`.
   
 **Output files.**
-Dictionary whose keys are integers from 1 to `max_M` and the value at key $M$ is a list of the coefficients $\delta_{N,n}$ for $n = 1, ..., 2M+1$ recorded as strings. The dictionary is split as several JSON files of size roughly equal to the parameter `chunk_size`. The path of the JSON files will be 
-
-<pre> ~/Data/p<b>[n_dps]</b>/CoefDelta_M<b>[start]</b>-<b>[end]</b>_p<b>[n_dps]</b>.json </pre>
-
-where `start` and `end` determine the range of dictionary keys stored in the file.     
+Dictionary whose keys are integers from 1 to `max_M` and the value at key $M$ is a list of the coefficients $\delta_{M,n}$ for $n = 1, ..., 2M+1$ recorded as strings. The dictionary is split as several JSON files of size in bytes of at most `chunk_size`. The path of the JSON files will be <code>~/Data/p<b>[<i>n_dps</i>]</b>/CoefDelta_M<b>[<i>start</i>]</b>-<b>[<i>end</i>]</b>_p<b>[<i>n_dps</i>]</b>.json</code>, where `start` and `end` denote the key range for the dictionary entries stored in the file.     
 
 ### **`nu_scf.jl`**
 
-This script computes the approximation error 
+This script computes the multiplicative error function $\nu_{M, K}(s)$ as defined in the previous section for the ranges `range_M`, `range_K`, `range_s` of the parameters $M, K,s$, respectively. 
 
 **Parameters.**
 
-* `range_M` (). Maximal index of $M$ for the approximation.
-* `range_K` (). 
-* `range_s` ().
-* `n_dps` (int). 
-* `chunk_size` (int). 
+* `range_M` (StepRange of int). Range of integer values of $M$ for the computation of $\nu_{M, K}(s)$.
+* `range_K` (StepRange of int). Range of integer values of $K$ for the computation of $\nu_{M, K}(s)$.
+* `range_s` (StepRange of numbers). Range of values of $s$ for the computation of $\nu_{M, K}(s)$ (they may be integers or float).
+* `n_dps` (int). Precision in number of digits. It must coincide with the precision specified in the input file paths (see "Input files" below).
+* `chunk_size` (int). Upper bound *in bytes* for the size of output JSON files (see "Output files" below).
 
-**Input file.**
+**Input files.**
+JSON files (as output by `coef_delta.jl`) with paths <code>~/Data/p<b>[<i>n_dps</i>]</b>/CoefDelta_M<b>[<i>start</i>]</b>-<b>[<i>end</i>]</b>_p<b>[<i>n_dps</i>]</b>.json</code> listing the coefficients $\delta_{M,n}$ for all the values of $M$ contained in `range_M` with precision `n_dps`. 
 
-**Output.**
+**Output files.**
+Dictionary whose keys are tuples `(M,K,s)` in the Cartesian product of the ranges `range_M`, `range_K` and `range_s`. The value at key `(M,K,s)` is the value of the function $\nu_{M, K}(s)$. The dictionary is split as several JSON files of size in bytes of at most `chunk_size`. The path of the JSON files is 
+
+<pre> ~/Data/p<b>[<i>n_dps</i>]</b>/nu_M<b>[<i>range_M</i>]</b>_K<b>[<i>range_K</i>]</b>_s<b>[<i>range_s</i>]</b>_p<b>[<i>n_dps</i>]</b>_part_<b>[<i>i</i>]</b>.json </pre>
+
+where the parameter `i` indexes the parts in which the dictionary is divided. If the whole dictionary has size less than `chunk_size`, then it is stored as 
+
+<pre> ~/Data/p<b>[<i>n_dps</i>]</b>/nu_M<b>[<i>range_M</i>]</b>_K<b>[<i>range_K</i>]</b>_s<b>[<i>range_s</i>]</b>_p<b>[<i>n_dps</i>]</b>_part_<b>[<i>i</i>]</b>.json </pre>
+
+without `i` parameter. 
