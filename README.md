@@ -1,20 +1,23 @@
 # Zero-based approximation of the Riemann zeta function
 
-This project delves into the *Riemann zeta function*, a cornerstone of number theory due to the remarkable connection between its zeros and the distribution of prime numbers. The exact location of its zeros constitutes the renowned Riemann hypothesis.
+This project delves into the [*Riemann zeta function*](https://en.wikipedia.org/wiki/Riemann_zeta_function), a cornerstone of number theory due to the remarkable connection between its zeros and the distribution of prime numbers. The exact location of its zeros constitutes the renowned [Riemann hypothesis](https://en.wikipedia.org/wiki/Riemann_hypothesis).
 
-This project focuses on a sequence of complex functions conceived by Y. Matiyasevich as efficient approximations of $\zeta$. Our goal is to fully elucidate the nature of the approximation error to uncover new insights into the Riemann zeta function by **analyzing vast datasets**. 
+This project focuses on a sequence of complex functions conceived by [Y. Matiyasevich](https://en.wikipedia.org/wiki/Yuri_Matiyasevich) as efficient approximations of $\zeta$. Our goal is to fully elucidate the nature of the approximation error by **analyzing vast datasets** and thereby uncover new insights into the Riemann zeta function. 
 
 ## Overview
 
-The code in this repository –written in Python and Julia– generates the data that defines Matiyasevich's approximations of the Riemann zeta function and then computes the approximation errors. The next section of this README provides a quick introduction to the mathematical objects involved in this code. After that, we give an overview of the various scripts and their key functions.
+The code in this repository –written in Python and Julia– generates the numerical data that defines Matiyasevich's approximations of the Riemann zeta function, as introduced in the references [^mat13] and [^mat16], and then computes the approximation errors. The next section of this README introduces the mathematical objects involved in this code, and the subsequent one gives an overview of the various scripts in the repository and their key functions.
 
-In order to handle computational instability in our calculations, we need to maintain high precision in our floating-point numbers, generally requiring around $10^5$ or more decimal digits. We achieve this using **arbitrary-precision floating-point arithmetic**, available in Python through the `mpmath` package, and in Julia through its native `BigFloat` type. 
+[^mat13]: Y. Matiyasevich. *Calculation of Riemann's zeta function via interpolating determinants.* Preprints of MPIM in Bonn, 2013.  [http://www.mpim-bonn.mpg.de/preblob/5368](http://www.mpim-bonn.mpg.de/preblob/5368).
+[^mat16]: Y. Matiyasevich. *Riemann’s zeta function and finite Dirichlet series.* St. Petersburg Math. J. 27 (2016), 985-1002. [https://www.ams.org/journals/spmj/2016-27-06/S1061-0022-2016-01431-9/](https://www.ams.org/journals/spmj/2016-27-06/S1061-0022-2016-01431-9/)
+
+To handle computational instability in our calculations, we maintain high precision in our floating-point numbers, generally requiring around $10^5$ or more decimal digits. This can be achieved using **arbitrary-precision floating-point arithmetic**, available in Python through the `mpmath` package, and in Julia through its native `BigFloat` type. 
 
 The need for arbitrary precision resulted in significant performance issues, which we addressed by (i) implementing the most computationally intensive parts of the code in **Julia**, and (ii) **parallelizing** whenever feasible. 
 
-The Python function `mpmath.zetazero`, which has no equivalent in Julia, calculates the critical-line zeros of $\zeta$ with a specified precision. While it is possible to call a Python function in Julia using `PyCall`, it does not appear feasible to parallelize a function in this context. This explains our choice of Python for this specific part of the code. 
+The Python function `mpmath.zetazero`, which has no equivalent in Julia, calculates the critical-line zeros of $\zeta$ with a specified precision. While it is feasible to call a Python function in Julia using `PyCall`, it does not appear possible to parallelize a function in this context. This explains our choice of Python for this specific part of the code. 
 
-## A bit of the math behind the code
+## Mathematical objects in the code
 
 The Riemann zeta function $\zeta$ is defined as the infinite sum 
 
@@ -26,7 +29,9 @@ Matiyasevich's approximations of $\zeta$ are finite sums of the form $\sum_{n=1}
 
 <p align="center"><img src="./Images/critical.png" width=300 alt="Critical strip and line with a few non-trivial zeros"></p>
 
-The interpolations are then defined by the formula
+The approximations[^longnote] are defined in the references [^mat13] and [^mat16] by the formula
+
+[^longnote]: Our notation differs from Matiyasevich's in that our Ω_M(s) functions correspond to the functions Δ_{2M+1}(s) in his articles.
 
 $$\Omega_M(s) = \sum_{n=1}^{2M+1} \delta_{M,n} \ n^{-s}$$
 
@@ -34,25 +39,25 @@ where $M$ is a positive integer, $\delta_{M,1} = 1$, and the rest of the coeffic
 
 $$\Omega_M(\rho_1) = \cdots = \Omega_M(\rho_M) = \Omega_M(\bar\rho_1) = \cdots = \Omega_M(\bar\rho_M) = 0.$$
 
-Despite being defined only from a finite number of zeros, Matiyasevich observed that the functions $\Omega_M$ "remember" a great deal of information about the Riemann zeta function and have numerous remarkable properties, as described in the reference [REF]. 
+Despite being defined only from a finite number of zeros, Matiyasevich observed that the approximations $\Omega_M$ "remember" a great deal of information about the Riemann zeta function and have numerous remarkable properties, as described in the two references above. 
 
 In this project, we focus on the quotient
 
 $$\nu_M(s) := \frac{\Omega_M(s)}{\zeta(s)} = \frac{\sum_{n=1}^{2M+1} \delta_{M,n} \ n^{-s}}{\sum_{n=1}^{+\infty} n^{-s}}.$$
 
-By the Möbius inversion formula, the quotient $\nu_M(s)$ may be written as the infinite sum
+By the [Möbius inversion formula](https://en.wikipedia.org/wiki/M%C3%B6bius_inversion_formula), the quotient $\nu_M(s)$ may be written as the infinite sum
 
 $$\nu_M(s) = \sum_{n=1}^{+\infty} \mu_{M,n} \ n^{-s},$$
 
-where the coefficients $\mu_{M,n}$ are determined by the formula
+(see Eq. 93 in [^mat13]) where the coefficients $\mu_{M,n}$ are determined by the formula
 
-$$\mu_{M,n} = \sum_{\overset{{\displaystyle d=1}}{d \mid n}}^{2M+1} \mu\left(\frac{n}{d}\right) \ \delta_{M,d}.$$
+$$\mu_{M, n} = \sum_{\overset{{\displaystyle d=1}}{d \mid n}}^{2M+1} \mu\left(\frac{n}{d}\right) \ \delta_{M,d}.$$
 
 and $\mu$ denotes the Möbius mu function. Finally, we consider the finite truncation
 
-$$\nu_{M,K}(s):= \sum_{n=1}^K \mu_{M,n} \ n^{-s}$$
+$$\nu_{M, K}(s):= \sum_{n=1}^K \mu_{M,n} \ n^{-s}$$
 
-of $\nu_{M}(s)$. Both $\nu_M(s)$ and $\nu_{M, K}(s)$ quantify the difference between Matiyasevich's interpolations and the Riemann zeta function. 
+of $\nu_{M}(s)$ (see Eq. 96 in [^mat13]). Both $\nu_M(s)$ and $\nu_{M, K}(s)$ quantify the difference between Matiyasevich's interpolations and the Riemann zeta function. 
 
 Through our data-driven approach, we aim to describe the dependencies of the functions $\nu_M(s)$ and $\nu_{M, K}(s)$ on the parameters $M, K, s$, generating a comprehensive mathematical conjecture. 
 
@@ -69,28 +74,48 @@ This script returns a list of the imaginary parts of the first $M$ critical-line
 * `n_dps` (int). Precision in number of digits.
 * `n_cores` (int). Number of cores for multi-threading. 
 
-**Output.**
-Text file (txt) containing the imaginary parts of the first `max_M` critical-line zeros with precision of `n_dps` number of digits, ordered increasingly and separated by new-line characters `\n`. Its path will be `~/Data/p(n_dps)/ImZetaZero_M(max_M)_p(n_dps).txt`.
+**Output file.**
+Text file (txt) containing the imaginary parts of the first `max_M` critical-line zeros with precision of `n_dps` number of digits, ordered increasingly and separated by new-line characters `\n`. Its path will be 
 
-**Key functions**
-
-TODO
+<pre> ~/Data/p<b>[n_dps]</b>/ImZetaZero_M<b>[max_M]</b>_p<b>[n_dps]</b>.txt </pre>
 
 ### **`coef_delta.jl`**
 
-This script computes the coefficients $\delta_{M,n}$ (with $n=1, \ldots, 2M+1$) of Matiyasevich's approximation $\Omega_M$ for all $M = 1$, ..., `max_M`, by solving the linear systems corresponding to all of the approximations simultaneously. It is a multi-thread implementation in Julia of the Gauss algorithm without pivots, based on an algorithm due to Matiyasevich and ___.
+This script computes the coefficients $\delta_{M,n}$ (with $n=1, \ldots, 2M+1$) of Matiyasevich's approximation $\Omega_M$ for all $M = 1$, ..., `max_M`, by solving the linear systems corresponding to all of the approximations simultaneously. It is a multi-thread implementation in Julia of the Gauss algorithm without pivots, based on an algorithm due to Beliakov and Matiyasevich (see the reference [^bel]).
+
+[^bel]: G. Beliakov and Y. Matiyasevich. *A parallel algorithm for calculation of determinants and minors using arbitrary precision arithmetic.* BIM Numerical Mathematics 56 (2016), 33–50. 
 
 **Parameters**
 
-* `max_M` (int). Maximal index of $M$ for the approximation
-* `max_computed_M` (int).
+* `max_M` (int). Maximal index of $M$ for the approximations $\Omega_M$ to be computed. 
+* `max_computed_M` (int). Maximal index of the zeros contained in the input file (see "Input file" below).
+* `n_dps` (int). Precision in number of digits. It must coincide with the precision specified in the path of the input file (see "Input file" below).
+* `chunk_size` (int).  Upper bound *in bytes* for size of output JSON files.  
+
+**Input file.**
+Text file (txt) as output by the script `zeta_zeros.py` with path
+
+<pre> ~/Data/p<b>[n_dps]</b>/ImZetaZero_M<b>[max_computed_M]</b>_p<b>[n_dps]</b>.txt </pre>
+  
+**Output files.**
+Dictionary whose keys are integers from 1 to `max_M` and the value at key $M$ is a list of the coefficients $\delta_{N,n}$ for $n = 1, ..., 2M+1$ recorded as strings. The dictionary is split as several JSON files of size roughly equal to the parameter `chunk_size`. The path of the JSON files will be 
+
+<pre> ~/Data/p<b>[n_dps]</b>/CoefDelta_M<b>[start]</b>-<b>[end]</b>_p<b>[n_dps]</b>.json </pre>
+
+where `start` and `end` determine the range of dictionary keys stored in the file.     
+
+### **`nu_scf.jl`**
+
+This script computes the approximation error 
+
+**Parameters.**
+
+* `range_M` (). Maximal index of $M$ for the approximation.
+* `range_K` (). 
+* `range_s` ().
 * `n_dps` (int). 
 * `chunk_size` (int). 
 
-**Input.**
-Text file (txt) `~/Data/p(n_dps)/ImZetaZero_M(max_computed_M)_p(n_dps).txt` as output by the script `zeta_zeros.py`.
-  
-**Output.**
-Dictionary whose keys are integers from 1 to `max_M` and the value at key $M$ is a list of the coefficients $\delta_{N,n}$ for $n = 1, ..., 2M+1$ recorded as strings. The dictionary is split as several JSON files of size roughly equal to the parameter `chunk_size`. The path of the JSON files will be `~/Data/p$(n_dps)/CoefDelta_M$(start)-$(end)_p$(n_dps).json` where `start` and `end` determine the range of dictionary keys stored in the file.     
+**Input file.**
 
-### **`nu_scf.jl`**
+**Output.**
