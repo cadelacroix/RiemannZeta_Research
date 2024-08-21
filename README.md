@@ -6,7 +6,7 @@ This project focuses on a sequence of complex functions conceived by [Y. Matiyas
 
 ## Overview
 
-The code in this repository –written in Python and Julia– generates the numerical data that defines Matiyasevich's approximations of the Riemann zeta function, as introduced in the references [^mat13] and [^mat16], and then computes the approximation errors. The next section of this README introduces the mathematical objects involved in this code, and the subsequent one gives an overview of the various scripts in the repository and their key functions.
+The code in this repository –written in Python and Julia– generates the numerical data that defines Matiyasevich's approximations of the Riemann zeta function, as introduced in the references [^mat13] and [^mat16], and then computes the approximation errors. The next section of this README introduces the mathematical objects involved in this code, and the subsequent one gives an overview of the various scripts in the repository.
 
 [^mat13]: Y. Matiyasevich. *Calculation of Riemann's zeta function via interpolating determinants.* Preprints of MPIM in Bonn, 2013.  [http://www.mpim-bonn.mpg.de/preblob/5368](http://www.mpim-bonn.mpg.de/preblob/5368).
 [^mat16]: Y. Matiyasevich. *Riemann’s zeta function and finite Dirichlet series.* St. Petersburg Math. J. 27 (2016), 985-1002. [https://www.ams.org/journals/spmj/2016-27-06/S1061-0022-2016-01431-9/](https://www.ams.org/journals/spmj/2016-27-06/S1061-0022-2016-01431-9/)
@@ -53,7 +53,7 @@ $$\nu_M(s) = \sum_{n=1}^{+\infty} \mu_{M,n} \ n^{-s},$$
 
 $$\mu_{M, n} = \sum_{\overset{{\displaystyle d=1}}{d \mid n}}^{2M+1} \mu\left(\frac{n}{d}\right) \ \delta_{M,d}.$$
 
-and $\mu$ denotes the Möbius mu function. Finally, we consider the finite truncation
+and $\mu$ denotes the [Möbius mu function](https://en.wikipedia.org/wiki/M%C3%B6bius_function). Finally, we consider the finite truncation
 
 $$\nu_{M, K}(s):= \sum_{n=1}^K \mu_{M,n} \ n^{-s}$$
 
@@ -61,18 +61,24 @@ of $\nu_{M}(s)$ (see Eq. 96 in [^mat13]). Both $\nu_M(s)$ and $\nu_{M, K}(s)$ qu
 
 Through our data-driven approach, we aim to describe the dependencies of the functions $\nu_M(s)$ and $\nu_{M, K}(s)$ on the parameters $M, K, s$, generating a comprehensive mathematical conjecture. 
 
-## Scripts and functions
+## Scripts
 
-Before executing any of the scripts described below, parameters should be adjusted in their `main` functions.
+Before executing any of the scripts described below, the parameters must be adjusted in their `main` functions. Individual functions are documented inside the scripts.
+
+**Remark on multithreading in Julia.** Julia runs by default in single-thread mode. To enable multithreading in Julia, one must add the command `-t` (which stands for "threads") when executing it. For example, `julia -t 4` starts Julia with four threads, 
+
+<pre>julia -t 4 coef_delta.jl</pre>
+
+runs the script `coef_delta.jl` with four threads, and `julia -t auto` detects automatically the maximum number of threads available in the machine. 
 
 ### **`zeta_zeros.py`**
 
-This script returns a list of the imaginary parts of the first $M$ critical-line zeros $\rho_1,\rho_2,\ldots,\rho_M$ of the Riemann zeta function (see [image](./Images/critical.png) above), multi-threading the execution of the function `mpmath.zetazero`.
+This script returns a list of the imaginary parts of the first $M$ critical-line zeros $\rho_1,\rho_2,\ldots,\rho_M$ of the Riemann zeta function (see [image](./Images/critical.png) above), multithreading the execution of the function `mpmath.zetazero`.
 
 **Parameters**
 * `max_M` (int). Maximal index $M$ of the critical-line zeros to be computed.
 * `n_dps` (int). Precision in number of digits.
-* `n_cores` (int). Number of cores for multithreading. 
+* `n_cores` (int). Number of cores used for multithreading. 
 
 **Output file.**
 TXT file containing the imaginary parts of the first `max_M` critical-line zeros with a precision of `n_dps` number of digits, ordered increasingly and separated by new-line characters `\n`. Its path will be <code>~/Data/p<b>[<i>n_dps</i>]</b>/ImZetaZero_M<b>[<i>max_M</i>]</b>_p<b>[<i>n_dps</i>]</b>.txt</code>.
@@ -109,7 +115,7 @@ This script computes the multiplicative error function $\nu_{M, K}(s)$ as define
 * `chunk_size` (int). Upper bound *in bytes* for the size of output JSON files (see "Output files" below).
 
 **Input files.**
-JSON files (as output by `coef_delta.jl`) with paths <code>~/Data/p<b>[<i>n_dps</i>]</b>/CoefDelta_M<b>[<i>start</i>]</b>-<b>[<i>end</i>]</b>_p<b>[<i>n_dps</i>]</b>.json</code> listing the coefficients $\delta_{M,n}$ for all the values of $M$ contained in `range_M` with precision `n_dps`. 
+JSON files (as output by `coef_delta.jl`) listing the coefficients $\delta_{M,n}$ for all the values of $M$ contained in `range_M` with precision `n_dps`. Their path should be <code>~/Data/p<b>[<i>n_dps</i>]</b>/CoefDelta_M<b>[<i>start</i>]</b>-<b>[<i>end</i>]</b>_p<b>[<i>n_dps</i>]</b>.json</code>.
 
 **Output files.**
 Dictionary whose keys are tuples `(M,K,s)` in the Cartesian product of the ranges `range_M`, `range_K` and `range_s`. The value at key `(M,K,s)` is the value of the function $\nu_{M, K}(s)$. The dictionary is split as several JSON files of size in bytes of at most `chunk_size`. The path of the JSON files is 
@@ -118,6 +124,6 @@ Dictionary whose keys are tuples `(M,K,s)` in the Cartesian product of the range
 
 where the parameter `i` indexes the parts in which the dictionary is divided. If the whole dictionary has size less than `chunk_size`, then it is stored as 
 
-<pre> ~/Data/p<b>[<i>n_dps</i>]</b>/nu_M<b>[<i>range_M</i>]</b>_K<b>[<i>range_K</i>]</b>_s<b>[<i>range_s</i>]</b>_p<b>[<i>n_dps</i>]</b>_part_<b>[<i>i</i>]</b>.json </pre>
+<pre> ~/Data/p<b>[<i>n_dps</i>]</b>/nu_M<b>[<i>range_M</i>]</b>_K<b>[<i>range_K</i>]</b>_s<b>[<i>range_s</i>]</b>_p<b>[<i>n_dps</i>]</b>.json </pre>
 
 without `i` parameter. The ranges are written in the format `[start]-[step]-[end]`.
