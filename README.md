@@ -120,4 +120,4 @@ where the parameter `i` indexes the parts in which the dictionary is divided. If
 
 <pre> ~/Data/p<b>[<i>n_dps</i>]</b>/nu_M<b>[<i>range_M</i>]</b>_K<b>[<i>range_K</i>]</b>_s<b>[<i>range_s</i>]</b>_p<b>[<i>n_dps</i>]</b>_part_<b>[<i>i</i>]</b>.json </pre>
 
-without `i` parameter. 
+without `i` parameter. The ranges are written in the format `[start]-[step]-[end]`.
