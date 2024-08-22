@@ -3,11 +3,31 @@
 # and positive imaginary part of the Riemann zeta function.
 
 from time import time
-import os
-import mpmath as mpm
+import os, numpy as np, mpmath as mpm
 from multiprocessing import Pool
-import parallelization as par
 
+
+# cut_ranges - subdivides the interval [0,MaxM-1] into n_cores integer 
+# subintervals. The output is a list of tuples, each containing the starting
+# and the end point of the interval. Used for parallelizing.
+
+def cut_ranges(n_cores,*rang):
+    if len(rang) == 1:
+        lo = 0; up = rang[0]
+    elif len(rang) == 2:
+        lo = rang[0]; up = rang[1]
+    else:
+        raise TypeError('cut_ranges admits one or two integer values for defining the range.')
+    
+    diff = up - lo
+    div = diff // (n_cores) * (n_cores)
+    rem = diff % n_cores
+    endpts = list(np.linspace(0,div,n_cores+1))
+    endpts = [int(item) for item in endpts]
+    for ind in range(rem):
+        endpts[-1-ind] += rem-ind
+    ranges = [(lo+endpts[i],lo+endpts[i+1]) for i in range(len(endpts)-1)]
+    return ranges
 
 # zeta_zeros_partial - computation of zeros using mpmath.zetazero. Parameters:
 # prec: number of correct decimal digits.
@@ -32,7 +52,7 @@ def zeta_zeros_partial(prec,*rang):
 
 def zeta_zeros(maxz,prec=100,cores=1):
     mpm.mp.dps = prec
-    ranges = par.cut_ranges(cores,maxz)
+    ranges = cut_ranges(cores,maxz)
     tasks_zz = [(prec,)+elem for elem in ranges]
     zz = []
 
@@ -41,6 +61,7 @@ def zeta_zeros(maxz,prec=100,cores=1):
 
     for item in result:
         zz.extend(item)
+    
     return zz
 
 

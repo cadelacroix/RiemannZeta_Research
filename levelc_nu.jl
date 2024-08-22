@@ -33,7 +33,7 @@ function main()
     println("Extracted level curves.")
 
     json_levelc = JSON.json(levelc)
-    open("Data/p$(n_dps)/nu_levelc_M+i_2M_im500-5-500_p$(n_dps).json","w") do f
+    open("Data/p$(n_dps)/nu_levelc_M+i_2M_im500-10-500_p$(n_dps).json","w") do f
         write(f,json_levelc)
     end
     println("Exported JSON file.")
