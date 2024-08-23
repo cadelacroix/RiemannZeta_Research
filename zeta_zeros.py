@@ -1,91 +1,72 @@
-##### COMPUTATION OF NON-TRIVIAL ZETA ZEROS WITH Re = 1/2 #####
-# Determine the imaginary part of the first max_M zeros with Re = 1/2
-# and positive imaginary part of the Riemann zeta function.
+## COMPUTATION OF CRITICAL-LINE ZEROS ##
 
-from time import time
 import os, numpy as np, mpmath as mpm
+from time import time
 from multiprocessing import Pool
 
+def zeta_zeros_partial(lo,up,n_precision):
+    """
+    Computes in a single thread the function mpmath.zetazero for values 
+    in range(lo,up) with decimal precision equal to n_precision. 
 
-# cut_ranges - subdivides the interval [0,MaxM-1] into n_cores integer 
-# subintervals. The output is a list of tuples, each containing the starting
-# and the end point of the interval. Used for parallelizing.
+    Parameters
+    ----------
+    lo, up, n_precision: int
 
-def cut_ranges(n_cores,*rang):
-    if len(rang) == 1:
-        lo = 0; up = rang[0]
-    elif len(rang) == 2:
-        lo = rang[0]; up = rang[1]
-    else:
-        raise TypeError('cut_ranges admits one or two integer values for defining the range.')
-    
-    diff = up - lo
-    div = diff // (n_cores) * (n_cores)
-    rem = diff % n_cores
-    endpts = list(np.linspace(0,div,n_cores+1))
-    endpts = [int(item) for item in endpts]
-    for ind in range(rem):
-        endpts[-1-ind] += rem-ind
-    ranges = [(lo+endpts[i],lo+endpts[i+1]) for i in range(len(endpts)-1)]
-    return ranges
-
-# zeta_zeros_partial - computation of zeros using mpmath.zetazero. Parameters:
-# prec: number of correct decimal digits.
-# rang: range of the indexes of zeta zeros to be computed. If it has length one,
-# it produces a list of the first rang[0] zeros. If it has length two, it 
-# produces the list of zeros between the indices rang[0] and rang[1]. 
-
-def zeta_zeros_partial(prec,*rang):
-    mpm.mp.dps = prec
-    if len(rang) == 1:
-        vec = [mpm.zetazero(i).imag for i in range(1,rang[0]+1)]
-    elif len(rang) == 2:
-        vec = [mpm.zetazero(i).imag for i in range(rang[0]+1,rang[1]+1)]
-    return vec
+    Returns
+    -------
+    list of number type mpmath.mpf
+    """
+    mpm.mp.dps = n_precision
+    return [mpm.zetazero(i).imag for i in range(lo+1,up+1)]
 
 
-# zeta_zeros - parallel implementation of zeta_zeros_partial to compute the 
-# first non-trivial zeros of zeta. Parameters:
-# max_M: number of Riemann zeta zeros to be computed.
-# n_precision: number of correct decimal digits.
-# n_cores: number of processing cores.
+def zeta_zeros(max_M,n_precision=100,n_cores=1):
+    """
+    Computes zeta_zeros_partial(0,max_M,n_precision) in multithread mode,
+    with number of threads equal to n_cores.
 
-def zeta_zeros(maxz,prec=100,cores=1):
-    mpm.mp.dps = prec
-    ranges = cut_ranges(cores,maxz)
-    tasks_zz = [(prec,)+elem for elem in ranges]
-    zz = []
+    Parameters
+    ----------
+    max_M, n_precision, n_cores: int
 
-    with Pool(cores) as pool:
-        result = pool.starmap(zeta_zeros_partial,tasks_zz)
+    Returns
+    -------
+    list of number type mpmath.mpf
+    """
+    mpm.mp.dps = n_precision
+    ranges = np.linspace(0,max_M,n_cores+1,dtype=int)
+    tasks = [(lo,up,n_precision) for lo,up in zip(ranges,ranges[1:])]
+    with Pool(n_cores) as pool:
+        result = pool.starmap(zeta_zeros_partial,tasks)
 
-    for item in result:
-        zz.extend(item)
-    
-    return zz
+    return [num for item in result for num in item]
 
-
-# If executed, this script exports the imaginary parts of the zeta zeros as 
-# a text file, separated by spaces. 
 
 if __name__ == '__main__':
+    """
+    # If executed, this script exports in a TXT file the result of 
+    # zeta_zeros(max_M,n_precision,n_cores), separated by spaces. 
+    """
     # Parameters 
     max_M = 1_500
     n_precision = 10_000
     n_cores = 80
 
     mpm.mp.dps = n_precision
+    st = time()
 
     # Compute zeta zeros
-    st = time()
     zz = zeta_zeros(max_M,n_precision,n_cores)
     print(f'Computed zeta zeros after {time()-st} s.')
 
-    # Write zeta zeros
+    # Check if folder exists
     if not os.path.exists(f'Data/p{n_precision}'):
         os.makedirs(f'Data/p{n_precision}')
-
-    with open(f'Data/p{n_precision}/ImZetaZero_M{max_M}_p{n_precision}.txt','w') as f:
+    
+    # Write file
+    filepath = f'Data/p{n_precision}/ImZetaZero_M{max_M}_p{n_precision}.txt'
+    with open(filepath,'w') as f:
         for num in zz:
             zstr = mpm.nstr(num,n=n_precision)
             f.write(zstr + '\n')
