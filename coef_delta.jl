@@ -1,9 +1,13 @@
-##### COMPUTATION OF DELTA COEFFICIENTS FOR FINITE DIRICHLET SUM #####
+## COMPUTATION OF DELTA COEFFICIENTS FOR FINITE DIRICHLET SUM ##
 
 using .Threads, JSON #, BenchmarkTools
 
-# read_zz - reads the imaginary parts of the first (max_z) 
-# Riemann zeta zeros from the file (filepath)
+"""
+    read_zz(filepath::String,max_z::Int64)
+
+Reads the imaginary parts of the critical-line zeros up to index
+max_z from filepath. 
+"""
 function read_zz(filepath::String,max_z::Int64)
     zz = Vector{BigFloat}()
     open(filepath) do f
@@ -16,11 +20,21 @@ function read_zz(filepath::String,max_z::Int64)
     zz
 end
 
+"""
+    omega(vect::Vector{T}) where T<:AbstractFloat
 
-# omega - sets up the "Vandermonde matrix" Ω_M from the 
-# vector (vect) that consists of the imaginary parts of zeta 
-# zeros. Here M = 2*length(vec) the output is a matrix of 
-# dimensions N x N, where N=2M+1.
+If v = -0.5.+im.*vect and M = length(v), returns the Vandermonde-like 
+matrix
+
+    |        1                 1          ***          1                   1           0 |
+    |   real(2^v[1])      imag(2^v[1])    ***    real(2^v[end])      imag(2^v[end])    0 |
+    |   real(3^v[1])      imag(3^v[1])    ***    real(3^v[end])      imag(3^v[end])    0 |
+    |        *                 *          *            *                   *           * |
+    |        *                 *           *           *                   *           * |
+    |        *                 *            *          *                   *           * |
+    | real((M-1)^v[1])  imag((M-1)^v[1])  ***  real((M-1)^v[end])  imag((M-1)^v[end])  0 |
+    |   real(M^v[1])      imag(M^v[1])    ***    real(M^v[end])      imag(M^v[end])    1 |
+"""
 function omega(vect::Vector{T}) where T<:AbstractFloat
     n_rows = 2*length(vect)+1
     mat = zeros(BigFloat,(n_rows,n_rows))
@@ -35,9 +49,12 @@ function omega(vect::Vector{T}) where T<:AbstractFloat
     transpose(mat)
 end
 
+"""
+    addrow!(input_mat::AbstractMatrix{T},mult::AbstractVector{T},addrow::AbstractVector{T}) where T<:AbstractFloat
 
-# addrow! - adds to each row i in (input_mat) the row
-# (mult[i] * addrow). Parallelized. 
+Adds to each row i of the matrix input_mat the row mult[i].*addrow. 
+Runs in multithread mode. 
+"""
 function addrow!(input_mat::AbstractMatrix{T},mult::AbstractVector{T},addrow::AbstractVector{T}) where T<:AbstractFloat
     @threads for j in axes(input_mat,2) 
         for i in axes(input_mat,1)         
@@ -46,9 +63,12 @@ function addrow!(input_mat::AbstractMatrix{T},mult::AbstractVector{T},addrow::Ab
     end
 end
 
+"""
+    gauss_elim!(omega_mat::AbstractMatrix{T}) where T<:AbstractFloat
 
-# gauss_elim! - performs Gauss elimination on the matrix (omega_mat)
-# while recording the multipliers under the main diagonal.
+Performs Gauss elimination on the matrix omega_mat, and records the 
+multipliers under the main diagonal of omega_mat.
+"""
 function gauss_elim!(omega_mat::AbstractMatrix{T}) where T<:AbstractFloat
     max_N = size(omega_mat,1)
     st_1 = time()
@@ -66,11 +86,14 @@ function gauss_elim!(omega_mat::AbstractMatrix{T}) where T<:AbstractFloat
     println("pGauss - Total: $(time() - st_1) s \n")
 end
 
+"""
+    mult_elementary!(omega_mat::AbstractMatrix{T}) where T<:AbstractFloat
 
-# mult_elementary! - multiplies the elementary matrices built from
-# the multipliers recorded by (gauss_elim!) under the main diagonal 
-# of (omega_mat). After this function, the coefficients δ_{N,n}
-# before normalization are contained under the main diagonal. 
+Multiplies the elementary matrices built from the multipliers recorded 
+by gauss_elim! under the main diagonal of omega_mat. The entries under 
+the diagonal in the row 2*Mm+1 corresponds to the coefficients δ_{Mm,n} 
+before rescaling so that δ_{Mm,1} = 1. Runs in multithread mode. 
+"""
 function mult_elementary!(omega_mat::AbstractMatrix{T}) where T<:AbstractFloat
     max_N = size(omega_mat,1)
     st_1 = time()
@@ -87,11 +110,13 @@ function mult_elementary!(omega_mat::AbstractMatrix{T}) where T<:AbstractFloat
     println("Product - Total: $(time() - st_1) s \n")
 end
 
+"""
+    normalized_coefficients(omega_mat::AbstractMatrix{T}) where T<:AbstractFloat
 
-# normalized_coefficients - From the processed (omega_mat) matrix 
-# produces a dictionary (delta) with integer keys N that range from 1 
-# to max_N = size of (omega_mat). The entry (delta[N]) is a list of the 
-# coefficients δ_{N,n}, normalized so that δ_{N,1} = 1. 
+Produces a dictionary delta with integer keys that range from 1 to 
+max_M = (size(omega_mat,1)-1)/2. The entry delta[Mm] is a list of the 
+coefficients δ_{Mm,n}, normalized so that δ_{Mm,1} = 1.
+"""
 function normalized_coefficients(omega_mat::AbstractMatrix{T}) where T<:AbstractFloat
     st_1 = time()
     max_M = Int((size(omega_mat,1)-1)/2)
@@ -105,9 +130,11 @@ function normalized_coefficients(omega_mat::AbstractMatrix{T}) where T<:Abstract
     delta
 end
 
+"""
+    delta_coef(omega_mat::AbstractMatrix{T}) where T<:AbstractFloat
 
-# delta_coef - produces the coefficients δ_{N,n} from the Vandermonde
-# matrix (omega_mat)
+Computation of the delta coefficients associated to the matrix omega_mat.
+"""
 function delta_coef(omega_mat::AbstractMatrix{T}) where T<:AbstractFloat
     gauss_elim!(omega_mat)
     mult_elementary!(omega_mat)
@@ -115,9 +142,13 @@ function delta_coef(omega_mat::AbstractMatrix{T}) where T<:AbstractFloat
 end
 
 
-# cuts - determines the partition of coefficients from M=1:(max_M) into
-# chunks of sizes of (chunk_size) assuming the size of one coefficient is 
-# (typical_size)
+"""
+    cuts(max_M::Int64,typical_size::Int64,chunk_size::Int64)
+
+Determines the partition of dictionary of coefficients from M=1:max_M 
+into chunks of sizes chunk_size assuming the size of one coefficient 
+is typical_size.
+"""
 function cuts(max_M::Int64,typical_size::Int64,chunk_size::Int64)
     cutlist = [0]
     new_cut = 0
@@ -139,8 +170,12 @@ function cuts(max_M::Int64,typical_size::Int64,chunk_size::Int64)
 end
 
 
-# write_coefs - write the coefficients (delta) into chunk files 
-# according to the partition in (cutlist)
+"""
+    write_coefs(delta::Dict{Int64,Vector{BigFloat}},cutlist::Vector{Int64},n_dps::Int64)
+
+Writes the coefficients delta into chunk files according 
+to the partition in cutlist.
+"""
 function write_coefs(delta::Dict{Int64,Vector{BigFloat}},cutlist::Vector{Int64},n_dps::Int64)
     for i in 1:length(cutlist)-1
         chunk = Dict(string(Mm) => map(string, delta[Mm]) for Mm in cutlist[i]+1:cutlist[i+1])
@@ -154,9 +189,9 @@ end
 
 function main()
     # Parameters
-    max_M = 5_000
-    max_computed_M = 40_000
-    n_dps = 40_000
+    max_M = 100
+    max_computed_M = 100
+    n_dps = 1_000
     chunk_size = Int(1e10)
 
     st = time()
@@ -165,11 +200,11 @@ function main()
     
     # Read zeta zeros from file and store in array
     zz = read_zz(filepath,max_M)
-    println("Imported zeta zeros: $(time()-st) s. \n")
+    println("Read zeta zeros: $(time()-st) s. \n")
 
-    # Set up Vandermonde matrix
+    # Set up Vandermonde-like matrix
     omega_mat = omega(zz)
-    println("Set up matrix: $(time()-st) s. \n")
+    println("Set up Vandermonde-like matrix: $(time()-st) s. \n")
 
     # Compute coefficients
     delta = delta_coef(omega_mat)
@@ -181,6 +216,5 @@ function main()
     write_coefs(delta,cutlist,n_dps)
     println("Total time: $(time()-st) s")
 end
-
 
 main()
