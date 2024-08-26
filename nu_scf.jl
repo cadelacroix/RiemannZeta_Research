@@ -219,7 +219,7 @@ function main()
     # Parameters
     range_M = 1:100
     range_K = 1:200
-    range_s = 1//1:1//6:2//1
+    range_s = 1//1:1//3:2//1
     n_dps = 1_000
     chunk_size = Int(5e9)
 

@@ -1,5 +1,6 @@
 /__pycache__/
-/Data/
+/Data/p10000
+/Data/p40000
 /Logs/
 /Other/
 /*.pbs
