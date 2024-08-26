@@ -2,8 +2,12 @@
 
 using FLoops, Nemo, JSON #, BenchmarkTools
 
-# interval - outputs a tuple of numbers (X, Y, Z) from a string 
-# (filename) of the form "CoefDelta_MX-Y_pZ.*".
+"""
+    interval(filename::String)
+
+Outputs a tuple of numbers (X, Y, Z) from a string 
+(filename) of the form "CoefDelta_MX-Y_pZ.*".
+"""
 function interval(filename::String)
     str_match = match(r"CoefDelta_M(\d+)-(\d+)_p(\d+)",filename)
     if !isnothing(str_match)
@@ -11,25 +15,30 @@ function interval(filename::String)
     end
 end
 
+"""
+    interval_list(dps::Int)
 
-# interval_list - applies the function (interval) to all the files
+Applies the function (interval) to all the files
 # in the folder "../RiemannZeta_Data/p$(dps)/", filters the tuples (X,Y,Z) with
 # Z = dps, and outputs a list of the corresponding pairs (X,Y).
+"""
 function interval_list(dps::Int)
     rawlist = Vector{Vector{Int64}}(filter(!isnothing,map(interval,readdir("Data/p$(dps)/"))))
     map(x -> (x[1],x[2]),filter(x -> x[3] == dps, rawlist))
 end
 
+"""
+    get_chain(intervals::Vector{Tuple{Int,Int}}, m::Int, M::Int)
 
-# get_chain - for a list of tuples (X,Y) corresponding to the 
-# starting and end point of integral intervals, outputs a sequence
-# of tuples (X_1,Y_1), ..., (X_k,Y_k) such that 
-# 1) m belongs to (X_1,Y_1) and M belongs to (X_k,Y_k)
-# 2) Y_i + 1 = X_{i+1} for all i in {1,...,k-1}.
-# If no such chain is found, it returns [].
-# This function is used to select the CoefDelta files that need 
-# to be opened to perform computations in a range with initial point
-# m and end point M. 
+For a list of tuples (X,Y) corresponding to the starting and end point 
+of integral intervals, outputs a sequence of tuples (X_1,Y_1), ..., (X_k,Y_k) 
+such that 
+   1) m belongs to (X_1,Y_1) and M belongs to (X_k,Y_k)
+   2) Y_i + 1 = X_{i+1} for all i in {1,...,k-1}.
+If no such chain is found, it returns []. This function is used to select 
+the CoefDelta files that need to be opened to perform computations in a range 
+with initial point m and end point M. 
+"""
 function get_chain(intervals::Vector{Tuple{Int,Int}}, m::Int, M::Int)
     sorted_intervals = sort(intervals)
     
@@ -68,9 +77,12 @@ function get_chain(intervals::Vector{Tuple{Int,Int}}, m::Int, M::Int)
     end
 end
 
+"""
+    open_coefdelta(range_M::AbstractRange{Int},dps::Int)
 
-# open_coefdelta - opens the files CoefDelta corresponding to the 
-# range (range_M) with a precision of (dps), and outputs a dictionary.
+Opens the files CoefDelta corresponding to the range (range_M) with 
+a precision of (dps), and outputs a dictionary.
+"""
 function open_coefdelta(range_M::AbstractRange{Int},dps::Int)
     intervals = interval_list(dps)
     chain = get_chain(intervals,range_M[1],range_M[end])
@@ -84,8 +96,11 @@ function open_coefdelta(range_M::AbstractRange{Int},dps::Int)
     merge(values(delta_pre)...)
 end
 
+"""
+    divis(n::T) where {T<:Integer}
 
-# divis - returns the list of all divisors of an integer (n).
+Returns the list of all divisors of an integer (n).
+"""
 function divis(n::T) where {T<:Integer}
     f = factor(n)
     d = T[one(T)]
@@ -97,13 +112,15 @@ function divis(n::T) where {T<:Integer}
     sort!(d)
 end
 
+"""
+    power_23adic(x::T,s::Number)
 
-# power_23adic - returns the s-th power of x. If s is a 
-# rational number with denominator whose prime factors are
-# only 2 and 3, it performs the operation using integer powers
-# and the built-in functions sqrt and cbrt. This implementation
-# accelerates significantly computations when x is a BigFloat
-# with a high precision.
+Returns the s-th power of x. If s is a rational number with 
+denominator whose prime factors are only 2 and 3, it performs 
+the operation using integer powers and the built-in functions 
+sqrt and cbrt. This implementation accelerates significantly 
+computations when x is a BigFloat with a high precision.
+"""
 function power_23adic(x::T,s::Number) where {T<:AbstractFloat}
     pow = x
     if eltype(s) == Rational{Int}
@@ -123,10 +140,12 @@ function power_23adic(x::T,s::Number) where {T<:AbstractFloat}
     pow^s
 end
 
+"""
+    nu_single(delta_N::Vector{T},n_cut::Integer,s::Number) where {T<:AbstractFloat}
 
-# nu_single - returns value of the nu function for a vector of delta 
-# coefficients (delta_N), with truncation parameter (n_cut) at the 
-# value (s).
+Returns value of the nu function for a vector of delta coefficients (delta_N), 
+with truncation parameter (n_cut) at the value (s).
+"""
 function nu_single(delta_N::Vector{T},n_cut::Integer,s::Number) where {T<:AbstractFloat}
     mu = zeros(T,n_cut)
     for n in 1:n_cut
@@ -150,11 +169,14 @@ function nu(range_M,range_K,range_s,delt)
     nu_dic
 end
 
+"""
+    scf(fl::T,n_depth::Integer) where {T<:AbstractFloat} 
 
-# scf - returns the simple continued fraction of a floating point (fl)
-# up to depth (n_depth), the output is a vector where the first number 
-# is the integer part of (fl), and the next numbers correspond to the
-# elements of the continued fraction.
+Returns the simple continued fraction of a floating point (fl)
+up to depth (n_depth), the output is a vector where the first number 
+is the integer part of (fl), and the next numbers correspond to the
+elements of the continued fraction.
+"""
 function scf(fl::T,n_depth::Integer) where {T<:AbstractFloat}
     q = zeros(Integer,n_depth)
     u = zeros(T,n_depth)
@@ -168,9 +190,12 @@ function scf(fl::T,n_depth::Integer) where {T<:AbstractFloat}
     q
 end
 
+"""
+    partition_dict(dic::Dict, typical_size::Int, chunk_size::Int)
 
-# partition_dict - given a dictionary (dic), outputs a list of subdictionaries 
+Given a dictionary (dic), outputs a list of subdictionaries 
 # of (dic) of size in bytes of at most (chunk_size). 
+"""
 function partition_dict(dic::Dict, typical_size::Int, chunk_size::Int)
     partition = []
     tmp_dic = Dict()
@@ -197,9 +222,12 @@ function partition_dict(dic::Dict, typical_size::Int, chunk_size::Int)
     partition
 end
 
+"""
+    write_coefs(partition,range_M,range_K,range_s,dps)
 
-# write_coefs - write the dictionaries of values of nu contained in the
-# list (partition) into chunk files. 
+Write the dictionaries of values of nu contained in the
+list (partition) into chunk files.
+""" 
 function write_nu(partition,range_M,range_K,range_s,dps)
     function str_range(rang)
         replace("$(rang[1])-$(step(rang))-$(rang[end])", "//" => "ff")
