@@ -1,3 +1,7 @@
+"""
+This script extracts level curves from large nu files.
+"""
+
 using BenchmarkTools, JSON, .Threads
 
 function parse_tuple(str)
