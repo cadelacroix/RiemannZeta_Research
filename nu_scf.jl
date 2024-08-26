@@ -1,6 +1,5 @@
 ##### COMPUTATION OF nu(M,K,s) #####
 
-
 using FLoops, Nemo, JSON #, BenchmarkTools
 
 # interval - outputs a tuple of numbers (X, Y, Z) from a string 
@@ -203,7 +202,7 @@ end
 # list (partition) into chunk files. 
 function write_nu(partition,range_M,range_K,range_s,dps)
     function str_range(rang)
-        "$(rang[1])-$(step(rang))-$(rang[end])"
+        replace("$(rang[1])-$(step(rang))-$(rang[end])", "//" => "ff")
     end
 
     partition = map(JSON.json,partition)
@@ -218,10 +217,10 @@ end
 
 function main()
     # Parameters
-    range_M = 1:1500
-    range_K = 1:3000
-    range_s = 1:1
-    n_dps = 10_000
+    range_M = 1:100
+    range_K = 1:200
+    range_s = 1//1:1//6:2//1
+    n_dps = 1_000
     chunk_size = Int(5e9)
 
     st = time()
@@ -242,6 +241,5 @@ function main()
     write_nu(partition,range_M,range_K,range_s,n_dps)
     println("Total time: $(time()-st) s.")
 end
-
 
 main()
