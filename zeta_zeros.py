@@ -49,9 +49,9 @@ if __name__ == '__main__':
     # zeta_zeros(max_M,n_precision,n_cores), separated by spaces. 
     """
     # Parameters 
-    max_M = 1_500
-    n_precision = 10_000
-    n_cores = 80
+    max_M = 100
+    n_precision = 1_000
+    n_cores = 4
 
     mpm.mp.dps = n_precision
     st = time()
